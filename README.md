@@ -7,13 +7,13 @@
 [![Discord](https://img.shields.io/discord/1245426111903699087?label=Discord&logo=discord&logoColor=white&color=7289DA)](https://discord.gg/JWJmMPc72H)
 
 Website: https://controlr.app  
-Demo Server: https://demo.controlr.app  (West US)  
+Demo Server: https://demo.controlr.app (West US)  
 Docker: https://hub.docker.com/r/bitbound/controlr  
 DeepWiki: https://deepwiki.com/bitbound/ControlR  
 Discussions: https://github.com/bitbound/ControlR/discussions  
-Project Board: https://github.com/users/bitbound/projects/1  
+Project Board: https://github.com/users/bitbound/projects/1
 
-## Quick Start: 
+## Quick Start:
 
 ```
 wget https://raw.githubusercontent.com/bitbound/ControlR/main/docker-compose/docker-compose.yml
@@ -22,7 +22,7 @@ sudo docker compose up -d
 
 **IMPORTANT:** Read the below section regarding [reverse proxy configuration](#reverse-proxy-configuration).
 
-At minimum, you will need to supply environment variables (e.g. `ControlR_POSTGRES_USER`) for the anchors (e.g. `$pgUser`) at the top of the docker-compose file. Alternatively, you could also use Docker secrets, an environment file, or hard-code them in the docker-compose file.  Whatever works for your setup and security requirements.
+At minimum, you will need to supply environment variables (e.g. `ControlR_POSTGRES_USER`) for the anchors (e.g. `$pgUser`) at the top of the docker-compose file. Alternatively, you could also use Docker secrets, an environment file, or hard-code them in the docker-compose file. Whatever works for your setup and security requirements.
 
 See the comments in the docker-compose file for additional configuration info.
 
@@ -32,9 +32,9 @@ Afterward, ControlR should be available on port 5120 (by default). Running `curl
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/controlr?referralCode=yr3zmo&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
-You can deploy ControlR on Railway using the above button.  I've been testing out their service, and so far, I really like it.  The link includes my referral code, `yr3zmo`, which gives me a referral credits on Railway.
+You can deploy ControlR on Railway using the above button. I've been testing out their service, and so far, I really like it. The link includes my referral code, `yr3zmo`, which gives me a referral credits on Railway.
 
-Note that SMTP ports are blocked on Free and Hobby plans.  You'll want to disable email sending via the `ControlR_AppOptions__DisableEmailSending` environment variable.
+Note that SMTP ports are blocked on Free and Hobby plans. You'll want to disable email sending via the `ControlR_AppOptions__DisableEmailSending` environment variable.
 
 ## Reverse Proxy Configuration:
 
@@ -48,17 +48,17 @@ If you have another reverse proxy in front of Docker (e.g., Nginx, Caddy, etc.),
 
 Additional proxy IPs can be added to the `KnownProxies` list in the docker-compose file.
 
-If your service is guaranteed to only receive traffic from a trusted reverse proxy, you can set the environment variable `ControlR_AppOptions__EnableNetworkTrust` to `true`.  This will trust all IPs in the forwarded headers.  Only enable this if you are sure that untrusted clients cannot connect directly to your service.
+If your service is guaranteed to only receive traffic from a trusted reverse proxy, you can set the environment variable `ControlR_AppOptions__EnableNetworkTrust` to `true`. This will trust all IPs in the forwarded headers. Only enable this if you are sure that untrusted clients cannot connect directly to your service.
 
-If the public IP for your connected devices is not showing correctly, the problem is likely due to a misconfiguration here.  If `ControlR_Logging__LogLevel__Microsoft.AspNetCore.HttpOverrides` is set to `Debug`, you will see internal logs from Microsoft's `ForwardedHeadersMiddleware` showing the IP that isn't being trusted.
+If the public IP for your connected devices is not showing correctly, the problem is likely due to a misconfiguration here. If `ControlR_Logging__LogLevel__Microsoft.AspNetCore.HttpOverrides` is set to `Debug`, you will see internal logs from Microsoft's `ForwardedHeadersMiddleware` showing the IP that isn't being trusted.
 
 ## Server Configuration:
 
-The environment variables for the server can be found in the [docker-compose.yml](./docker-compose/docker-compose.yml) file.  See the comments there for more information.
+The environment variables for the server can be found in the [docker-compose.yml](./docker-compose/docker-compose.yml) file. See the comments there for more information.
 
 ## Multi-tenancy
 
-By default, the server is single-tenant, in the sense that there can only be one admin/tech/MSP tenant.  The first user created will be the server and tenant administrator, and subsequent accounts must be explicitly created by the tenant admin.  Customer devices can be organized using tags.
+By default, the server is single-tenant, in the sense that there can only be one admin/tech/MSP tenant. The first user created will be the server and tenant administrator, and subsequent accounts must be explicitly created by the tenant admin. Customer devices can be organized using tags.
 
 Setting `ControlR_AppOptions__EnablePublicRegistration` to `true` in the docker-compose file will allow anyone to create a new account on the server. A new tenant is created for each account created this way.
 
@@ -71,14 +71,17 @@ The database uses EF Core's [Global Query Filters](https://learn.microsoft.com/e
 - Full remote control support
 
 ### macOS Apple Silicon (tested on M1 running Sequoia)
+
 - Full remote control support
   - Controlling the login window is only possible after a user has logged in
 - Experimental remote control via VNC (Apple Screen Sharing)
 - Signed using adhoc certificate (this will change soon)
 
 ### macOS Intel (untested)
+
 - Experimental remote control via VNC (Apple Screen Sharing)
 - Signed using adhoc certificate (this will change soon)
+
 ### Ubuntu AMD64 (latest LTS)
 
 - Full remote control support on X11
@@ -91,17 +94,19 @@ The database uses EF Core's [Global Query Filters](https://learn.microsoft.com/e
 - Experimental remote control via VNC
 
 ### All Operating Systems
+
 - Terminal uses embedded cross-platform PowerShell host
 
 ## Agent Log Locations
 
-Agent logs can be streamed in real-time from the Remote Logs page, which can be found at `https://{server-url}/device-access/remote-logs?deviceId={device-id}`.  Please be sure to include relevant log files when reporting issues.
+Agent logs can be streamed in real-time from the Remote Logs page, which can be found at `https://{server-url}/device-access/remote-logs?deviceId={device-id}`. Please be sure to include relevant log files when reporting issues.
 
 Logs for the agent and desktop client are detailed below. On Windows, the path depends on whether the app is running in Debug or Release mode. On macOS and Linux, the path depends on whether the app is running as root.
 
-Under normal user circumstances, the main agent will run in Release mode as SYSTEM/root. For Mac and Ubuntu, the desktop client will normally run as the user for the current GUI session.  For Windows, the desktop client runs as SYSTEM due to permissions required for capturing and controlling full-screen UAC prompts and the WinLogon desktop.
+Under normal user circumstances, the main agent will run in Release mode as SYSTEM/root. For Mac and Ubuntu, the desktop client will normally run as the user for the current GUI session. For Windows, the desktop client runs as SYSTEM due to permissions required for capturing and controlling full-screen UAC prompts and the WinLogon desktop.
 
 **Main Agent**
+
 - **Windows**
   - Release: `C:\ProgramData\ControlR\{hostname}\Logs\ControlR.Agent\LogFile{date}.log`
   - Debug: `C:\ProgramData\ControlR\Debug\{hostname}\Logs\ControlR.Agent\LogFile{date}.log`
@@ -110,6 +115,7 @@ Under normal user circumstances, the main agent will run in Release mode as SYST
   - Running as user: `~/.controlr/logs/{hostname}/ControlR.Agent/LogFile{date}.log`
 
 **Desktop Client**
+
 - **Windows**
   - Release: `C:\ProgramData\ControlR\{hostname}\Logs\ControlR.DesktopClient\LogFile{date}.log`
   - Debug: `C:\ProgramData\ControlR\Debug\{hostname}\Logs\ControlR.DesktopClient\LogFile{date}.log`
@@ -137,11 +143,15 @@ Role Descriptions:
   - Able to manage and see stats for the server
   - This does not allow access to other tenants' devices or users
 
+## Development
+
+For information on setting up a development environment for ControlR on Linux, macOS, or Windows, see the [Development Setup Guide](docs/development/SETUP.md).
+
 ## API Spec
 
 A .NET API client for ControlR is published with each release on NuGet: [ControlR.ApiClient](https://www.nuget.org/packages/ControlR.ApiClient/).
 
-Additionally, an OpenAPI spec is created with each build of the server and committed to the repository.  It can be found [here](./ControlR.Web.Server/ControlR.Web.Server.json), or within the artifacts for each GitHub release.  You can use this file to generate API clients in any language.
+Additionally, an OpenAPI spec is created with each build of the server and committed to the repository. It can be found [here](./ControlR.Web.Server/ControlR.Web.Server.json), or within the artifacts for each GitHub release. You can use this file to generate API clients in any language.
 
 While debugging, you can also browse the API at https://localhost:7033/scalar/ or https://localhost:7033/openapi/v1.json.
 
@@ -158,18 +168,21 @@ To create a PAT, follow these steps:
 5. Add the token to the `x-personal-token` header in your API requests.
 
 ## Logon Tokens
-Logon Tokens are time-limited, single-use tokens that allow you to create an authenticated browser session with a **specific device**.  Coupled with PATs, this allows you to create an integration that can open a browser tab to access a particular device.
 
-See the `/api/logon-tokens` endpoint in the API spec.  A successful response includes the full URL, including the logon token, that can be opened in the browser to access the target device.
+Logon Tokens are time-limited, single-use tokens that allow you to create an authenticated browser session with a **specific device**. Coupled with PATs, this allows you to create an integration that can open a browser tab to access a particular device.
+
+See the `/api/logon-tokens` endpoint in the API spec. A successful response includes the full URL, including the logon token, that can be opened in the browser to access the target device.
 
 Remember that the token is single-use, so the URL can only be accessed once.
 
 ## Remote Control Input
 
 ### On Desktop
+
 - **Zoom**: Ctrl + Shift + Mouse Wheel
 
 ### On Mobile/Touch Devices
+
 - **Zoom**: Pinch gesture
 - **Right-Click**: Tap and hold
 - **Click-and-Drag**: Tap and hold, then drag
@@ -190,7 +203,7 @@ Relay servers are currently disabled on the public server (https://controlr.app)
 
 ## VNC and Apple Screen Sharing (Experimental)
 
-This is an experimental feature that allows you to control Mac and Linux devices using VNC.  The noVNC client is used for the front-end, and the connection is streamed via websockets through the ControlR server, to the agent, then to the VNC server on the device.
+This is an experimental feature that allows you to control Mac and Linux devices using VNC. The noVNC client is used for the front-end, and the connection is streamed via websockets through the ControlR server, to the agent, then to the VNC server on the device.
 
 Since the connection to the VNC server is over localhost, you can configure the VNC server to bind to the loopback interface, so it's not exposed to the local network.
 
