@@ -1,0 +1,21 @@
+{{- if .Values.aspire.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "controlr.aspire.fullname" . }}
+  labels:
+    {{- include "controlr.aspire.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.aspire.service.type }}
+  ports:
+  - port: {{ .Values.aspire.service.frontendPort }}
+    targetPort: frontend
+    protocol: TCP
+    name: frontend
+  - port: {{ .Values.aspire.service.otlpPort }}
+    targetPort: otlp
+    protocol: TCP
+    name: otlp
+  selector:
+    {{- include "controlr.aspire.selectorLabels" . | nindent 4 }}
+{{- end }}

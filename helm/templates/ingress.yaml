@@ -1,0 +1,41 @@
+{{- if .Values.controlr.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "controlr.fullname" . }}
+  labels:
+    {{- include "controlr.labels" . | nindent 4 }}
+  {{- with .Values.controlr.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.controlr.ingress.className }}
+  ingressClassName: {{ .Values.controlr.ingress.className }}
+  {{- end }}
+  {{- if .Values.controlr.ingress.tls }}
+  tls:
+    {{- range .Values.controlr.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.controlr.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "controlr.fullname" $ }}
+                port:
+                  number: {{ $.Values.controlr.service.port }}
+          {{- end }}
+    {{- end }}
+{{- end }}

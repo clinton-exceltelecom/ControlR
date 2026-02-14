@@ -1,0 +1,168 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "controlr.fullname" . }}
+  labels:
+    {{- include "controlr.labels" . | nindent 4 }}
+  annotations:
+    # ControlR uses SignalR for stateful real-time connections
+    # Horizontal scaling requires Redis backplane configuration
+    controlr.io/scaling-note: "Keep replicas at 1 without Redis backplane"
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.controlr.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "controlr.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "controlr.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "controlr.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: controlr
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        image: "{{ .Values.controlr.image.repository }}:{{ .Values.controlr.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.controlr.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: {{ .Values.controlr.env.aspnetcoreEnvironment | quote }}
+        - name: ASPNETCORE_HTTP_PORTS
+          value: "8080"
+        - name: ControlR_POSTGRES_USER
+          value: {{ .Values.postgresql.auth.username | quote }}
+        - name: ControlR_POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "controlr.postgresql.secretName" . }}
+              key: {{ .Values.postgresql.auth.secretKeys.adminPasswordKey }}
+        - name: ControlR_POSTGRES_HOST
+          value: {{ include "controlr.postgresql.host" . | quote }}
+        {{- if .Values.aspire.enabled }}
+        - name: ControlR_AspireDashboard__Token
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "controlr.fullname" . }}-aspire
+              key: browser-token
+        - name: ControlR_AspireDashboard__PublicWebUrl
+          value: {{ .Values.aspire.auth.publicUrl | quote }}
+        - name: ControlR_OTLP_ENDPOINT_URL
+          value: "http://{{ include "controlr.aspire.fullname" . }}:{{ .Values.aspire.service.otlpPort }}"
+        {{- end }}
+        - name: ControlR_AppOptions__EnablePublicRegistration
+          value: {{ .Values.controlr.env.appOptions.enablePublicRegistration | quote }}
+        - name: ControlR_AppOptions__AllowAgentsToSelfBootstrap
+          value: {{ .Values.controlr.env.appOptions.allowAgentsToSelfBootstrap | quote }}
+        - name: ControlR_AppOptions__AuthenticatorIssuerName
+          value: {{ .Values.controlr.env.appOptions.authenticatorIssuerName | quote }}
+        - name: ControlR_AppOptions__PersistPasskeyLogin
+          value: {{ .Values.controlr.env.appOptions.persistPasskeyLogin | quote }}
+        - name: ControlR_AppOptions__EnableCloudflareProxySupport
+          value: {{ .Values.controlr.env.appOptions.enableCloudflareProxySupport | quote }}
+        - name: ControlR_AppOptions__EnableNetworkTrust
+          value: {{ .Values.controlr.env.appOptions.enableNetworkTrust | quote }}
+        - name: ControlR_AppOptions__UseHttpLogging
+          value: {{ .Values.controlr.env.appOptions.useHttpLogging | quote }}
+        - name: ControlR_AppOptions__MaxFileTransferSize
+          value: {{ .Values.controlr.env.appOptions.maxFileTransferSize | quote }}
+        - name: ControlR_AppOptions__RequireUserEmailConfirmation
+          value: {{ .Values.controlr.env.appOptions.requireUserEmailConfirmation | quote }}
+        - name: ControlR_AppOptions__DisableEmailSending
+          value: {{ .Values.controlr.env.appOptions.disableEmailSending | quote }}
+        {{- if .Values.controlr.env.appOptions.smtp.host }}
+        - name: ControlR_AppOptions__SmtpDisplayName
+          value: {{ .Values.controlr.env.appOptions.smtp.displayName | quote }}
+        - name: ControlR_AppOptions__SmtpEmail
+          value: {{ .Values.controlr.env.appOptions.smtp.email | quote }}
+        - name: ControlR_AppOptions__SmtpHost
+          value: {{ .Values.controlr.env.appOptions.smtp.host | quote }}
+        - name: ControlR_AppOptions__SmtpLocalDomain
+          value: {{ .Values.controlr.env.appOptions.smtp.localDomain | quote }}
+        - name: ControlR_AppOptions__SmtpCheckCertificateRevocation
+          value: {{ .Values.controlr.env.appOptions.smtp.checkCertificateRevocation | quote }}
+        - name: ControlR_AppOptions__SmtpPassword
+          value: {{ .Values.controlr.env.appOptions.smtp.password | quote }}
+        - name: ControlR_AppOptions__SmtpPort
+          value: {{ .Values.controlr.env.appOptions.smtp.port | quote }}
+        - name: ControlR_AppOptions__SmtpUserName
+          value: {{ .Values.controlr.env.appOptions.smtp.userName | quote }}
+        {{- end }}
+        {{- range $index, $proxy := .Values.controlr.env.appOptions.knownProxies }}
+        - name: ControlR_AppOptions__KnownProxies__{{ $index }}
+          value: {{ $proxy | quote }}
+        {{- end }}
+        {{- range $index, $network := .Values.controlr.env.appOptions.knownNetworks }}
+        - name: ControlR_AppOptions__KnownNetworks__{{ $index }}
+          value: {{ $network | quote }}
+        {{- end }}
+        {{- if .Values.controlr.env.appOptions.oauth.microsoft.clientId }}
+        - name: ControlR_AppOptions__MicrosoftClientId
+          value: {{ .Values.controlr.env.appOptions.oauth.microsoft.clientId | quote }}
+        - name: ControlR_AppOptions__MicrosoftClientSecret
+          value: {{ .Values.controlr.env.appOptions.oauth.microsoft.clientSecret | quote }}
+        {{- end }}
+        {{- if .Values.controlr.env.appOptions.oauth.github.clientId }}
+        - name: ControlR_AppOptions__GitHubClientId
+          value: {{ .Values.controlr.env.appOptions.oauth.github.clientId | quote }}
+        - name: ControlR_AppOptions__GitHubClientSecret
+          value: {{ .Values.controlr.env.appOptions.oauth.github.clientSecret | quote }}
+        {{- end }}
+        - name: ControlR_KeyProtectionOptions__EncryptKeys
+          value: {{ .Values.controlr.env.keyProtection.encryptKeys | quote }}
+        {{- if .Values.controlr.env.keyProtection.certificatePath }}
+        - name: ControlR_KeyProtectionOptions__CertificatePath
+          value: {{ .Values.controlr.env.keyProtection.certificatePath | quote }}
+        - name: ControlR_KeyProtectionOptions__CertificatePassword
+          value: {{ .Values.controlr.env.keyProtection.certificatePassword | quote }}
+        {{- end }}
+        - name: ControlR_Logging__LogLevel__Default
+          value: {{ .Values.controlr.env.logging.defaultLevel | quote }}
+        - name: ControlR_Logging__LogLevel__Microsoft.AspNetCore.HttpLogging
+          value: {{ .Values.controlr.env.logging.httpLoggingLevel | quote }}
+        - name: ControlR_Logging__LogLevel__Microsoft.AspNetCore.HttpOverrides
+          value: {{ .Values.controlr.env.logging.httpOverridesLevel | quote }}
+        {{- if .Values.controlr.env.telemetry.azureMonitorConnectionString }}
+        - name: ControlR_AzureMonitor__ConnectionString
+          value: {{ .Values.controlr.env.telemetry.azureMonitorConnectionString | quote }}
+        {{- end }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        {{- with .Values.controlr.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- with .Values.controlr.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.controlr.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.controlr.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

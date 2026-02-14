@@ -1,0 +1,297 @@
+## ControlR Helm Chart Values
+## This file contains default values for the ControlR deployment
+
+## Global settings
+global:
+  ## Image pull secrets for private registries
+  imagePullSecrets: []
+
+## ControlR Web Server Configuration
+controlr:
+  ## Number of replicas
+  ## NOTE: ControlR uses SignalR for real-time connections and is not horizontally scalable
+  ## without a Redis backplane. Keep replicaCount at 1 unless you have configured Redis.
+  replicaCount: 1
+
+  image:
+    repository: bitbound/controlr
+    pullPolicy: IfNotPresent
+    ## Overrides the image tag whose default is the chart appVersion
+    tag: "latest"
+
+  ## Service configuration
+  service:
+    type: ClusterIP
+    port: 8080
+    annotations: {}
+
+  ## Ingress configuration
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+      # cert-manager.io/cluster-issuer: letsencrypt-prod
+      # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - host: controlr.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+      # - secretName: controlr-tls
+      #   hosts:
+      #     - controlr.example.com
+
+  ## Resource limits and requests
+  resources: {}
+    # limits:
+    #   cpu: 1000m
+    #   memory: 1Gi
+    # requests:
+    #   cpu: 500m
+    #   memory: 512Mi
+
+  ## Node selector
+  nodeSelector: {}
+
+  ## Tolerations
+  tolerations: []
+
+  ## Affinity
+  affinity: {}
+
+  ## Environment variables
+  env:
+    ## ASP.NET Core environment (Production, Development, Staging)
+    aspnetcoreEnvironment: Production
+
+    ## Application Options
+    appOptions:
+      ## Whether to make self-registration publicly available
+      enablePublicRegistration: false
+
+      ## Allows devices to self-register without requiring an installer key
+      allowAgentsToSelfBootstrap: false
+
+      ## The name that appears in TOTP authenticator apps
+      authenticatorIssuerName: "ControlR"
+
+      ## If enabled, signing in with a passkey will effectively add the "remember me" option
+      persistPasskeyLogin: false
+
+      ## Automatically obtain Cloudflare IPs and add them to KnownNetworks
+      enableCloudflareProxySupport: false
+
+      ## When enabled, bypasses KnownProxies/KnownIpNetworks checks and trusts all forwarded headers
+      enableNetworkTrust: false
+
+      ## For debugging. When enabled, extra logs will be written for all HTTP requests and responses
+      useHttpLogging: false
+
+      ## The maximum allowed file size for transfers in the remote File System component (bytes)
+      ## Set to 0 or less for no limit. Default is 100MB
+      maxFileTransferSize: 104857600
+
+      ## Whether users must confirm their email address before being allowed to log in
+      requireUserEmailConfirmation: true
+
+      ## Disable all email sending from the application
+      disableEmailSending: false
+
+      ## SMTP Configuration for sending emails
+      smtp:
+        displayName: ""
+        email: ""
+        host: ""
+        localDomain: ""
+        checkCertificateRevocation: true
+        password: ""
+        port: 587
+        userName: ""
+
+      ## Known proxies (IP addresses) that will be forwarding traffic to ControlR
+      knownProxies: []
+        # - "10.0.0.1"
+
+      ## Known networks (CIDR notation) that will be forwarding traffic to ControlR
+      knownNetworks: []
+        # - "10.0.0.0/8"
+
+      ## OAuth Providers
+      oauth:
+        ## Microsoft OAuth
+        microsoft:
+          clientId: ""
+          clientSecret: ""
+
+        ## GitHub OAuth
+        github:
+          clientId: ""
+          clientSecret: ""
+
+    ## Key Protection Options
+    keyProtection:
+      ## Configure X.509 certificate-based encryption for Data Protection keys at rest
+      encryptKeys: false
+      ## The file path to a PFX (.pfx) certificate file for key encryption
+      certificatePath: ""
+      ## The password for the PFX certificate file
+      certificatePassword: ""
+
+    ## Logging Configuration
+    logging:
+      ## Default log level (Trace, Debug, Information, Warning, Error, Critical)
+      defaultLevel: Information
+      ## Log level for HTTP logging middleware
+      httpLoggingLevel: Information
+      ## Log level for ForwardedHeadersMiddleware
+      httpOverridesLevel: Debug
+
+    ## OpenTelemetry Configuration
+    telemetry:
+      ## Azure Monitor connection string
+      azureMonitorConnectionString: ""
+
+## PostgreSQL Configuration
+postgresql:
+  ## Enable PostgreSQL deployment
+  enabled: true
+
+  ## PostgreSQL image configuration
+  image:
+    repository: postgres
+    tag: "18"
+    pullPolicy: IfNotPresent
+
+  ## PostgreSQL authentication
+  auth:
+    ## PostgreSQL username
+    username: postgres
+    ## PostgreSQL password (use existingSecret for production)
+    password: "password"
+    ## PostgreSQL database name
+    database: controlr
+    ## Use existing secret for password
+    existingSecret: ""
+    secretKeys:
+      adminPasswordKey: postgres-password
+
+  ## PostgreSQL service configuration
+  service:
+    type: ClusterIP
+    port: 5432
+
+  ## PostgreSQL persistence
+  persistence:
+    enabled: true
+    ## Storage class for persistent volume
+    storageClass: ""
+    ## Size of persistent volume
+    size: 10Gi
+    ## Access modes
+    accessModes:
+      - ReadWriteOnce
+
+  ## Resource limits and requests
+  resources: {}
+    # limits:
+    #   cpu: 500m
+    #   memory: 512Mi
+    # requests:
+    #   cpu: 250m
+    #   memory: 256Mi
+
+## Aspire Dashboard Configuration
+aspire:
+  ## Enable Aspire Dashboard deployment
+  enabled: true
+
+  ## Number of replicas
+  replicaCount: 1
+
+  image:
+    repository: mcr.microsoft.com/dotnet/aspire-dashboard
+    tag: "13.1"
+    pullPolicy: IfNotPresent
+
+  ## Service configuration
+  service:
+    type: ClusterIP
+    ## Frontend port (web UI)
+    frontendPort: 18888
+    ## OTLP port (telemetry ingestion)
+    otlpPort: 18889
+
+  ## Ingress configuration for Aspire Dashboard
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: metrics.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+
+  ## Aspire Dashboard authentication
+  auth:
+    ## Browser token for accessing the dashboard
+    browserToken: "token"
+    ## Public URL where the Aspire Dashboard will be accessible
+    publicUrl: "http://localhost:18888"
+    ## Auth mode (BrowserToken, Unsecured)
+    authMode: BrowserToken
+    ## Allow anonymous access (only for development)
+    allowAnonymous: false
+
+  ## Resource limits and requests
+  resources: {}
+    # limits:
+    #   cpu: 500m
+    #   memory: 512Mi
+    # requests:
+    #   cpu: 250m
+    #   memory: 256Mi
+
+  ## Node selector
+  nodeSelector: {}
+
+  ## Tolerations
+  tolerations: []
+
+  ## Affinity
+  affinity: {}
+
+## Service Account
+serviceAccount:
+  ## Specifies whether a service account should be created
+  create: true
+  ## Annotations to add to the service account
+  annotations: {}
+  ## The name of the service account to use
+  name: ""
+
+## Pod Security Context
+podSecurityContext: {}
+  # fsGroup: 2000
+
+## Security Context
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+## Autoscaling (for ControlR web server)
+## NOTE: Autoscaling is disabled by default because ControlR uses SignalR for stateful
+## real-time connections. Horizontal scaling requires a Redis backplane for SignalR.
+## Only enable this if you have configured Redis as a SignalR backplane.
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80

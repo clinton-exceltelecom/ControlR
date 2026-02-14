@@ -1,0 +1,15 @@
+apiVersion: v2
+name: controlr
+description: A Helm chart for ControlR - Cross-platform remote access and control solution
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords:
+  - remote-access
+  - remote-control
+  - remote-desktop
+home: https://github.com/bitbound/ControlR
+sources:
+  - https://github.com/bitbound/ControlR
+maintainers:
+  - name: ControlR Team

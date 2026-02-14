@@ -1,0 +1,80 @@
+{{- if .Values.aspire.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "controlr.aspire.fullname" . }}
+  labels:
+    {{- include "controlr.aspire.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.aspire.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "controlr.aspire.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "controlr.aspire.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "controlr.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: aspire
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        image: "{{ .Values.aspire.image.repository }}:{{ .Values.aspire.image.tag }}"
+        imagePullPolicy: {{ .Values.aspire.image.pullPolicy }}
+        ports:
+        - name: frontend
+          containerPort: 18888
+          protocol: TCP
+        - name: otlp
+          containerPort: 18889
+          protocol: TCP
+        env:
+        - name: Dashboard__Frontend__BrowserToken
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "controlr.fullname" . }}-aspire
+              key: browser-token
+        - name: Dashboard__Frontend__PublicUrl
+          value: {{ .Values.aspire.auth.publicUrl | quote }}
+        {{- if .Values.aspire.auth.allowAnonymous }}
+        - name: ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS
+          value: "true"
+        - name: Dashboard__Frontend__AuthMode
+          value: "Unsecured"
+        {{- end }}
+        {{- with .Values.aspire.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: frontend
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: frontend
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      {{- with .Values.aspire.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.aspire.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.aspire.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
