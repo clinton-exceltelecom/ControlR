@@ -62,7 +62,11 @@ public static class WebApplicationBuilderExtensions
       builder.AddServiceDefaults(ServiceNames.Controlr, useServiceDiscovery: true);
     }
 
-    if (appOptions.UseInMemoryDatabase)
+    // Configure database provider based on configuration
+    var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "PostgreSQL";
+
+    if (appOptions.UseInMemoryDatabase ||
+        databaseProvider.Equals("InMemory", StringComparison.OrdinalIgnoreCase))
     {
       builder.Services.AddDbContextFactory<AppDb>((_, options) =>
       {
@@ -312,39 +316,82 @@ public static class WebApplicationBuilderExtensions
 
   private static void AddPostgresDb(this IHostApplicationBuilder builder)
   {
+    // Try to get connection string from multiple sources
+    // Priority: 1. ConnectionStrings:PostgreSQL, 2. Individual env vars (POSTGRES_*)
+    var connectionString = builder.Configuration.GetConnectionString("PostgreSQL");
 
-    // Add DB services.
-    var pgUser = builder.Configuration.GetValue<string>("POSTGRES_USER");
-    var pgPass = builder.Configuration.GetValue<string>("POSTGRES_PASSWORD");
-    var pgHost = builder.Configuration.GetValue<string>("POSTGRES_HOST");
-
-    ArgumentException.ThrowIfNullOrWhiteSpace(pgUser);
-    ArgumentException.ThrowIfNullOrWhiteSpace(pgPass);
-    ArgumentException.ThrowIfNullOrWhiteSpace(pgHost);
-
-    if (Uri.TryCreate(pgHost, UriKind.Absolute, out var pgHostUri))
+    if (!string.IsNullOrWhiteSpace(connectionString))
     {
-      pgHost = pgHostUri.Authority;
+      // Connection string found - use it directly (may contain placeholders)
+      // Replace environment variable placeholders if present
+      connectionString = ReplaceEnvironmentVariables(connectionString, builder.Configuration);
+
+      builder.Services.AddDbContextFactory<AppDb>((sp, options) =>
+      {
+        options.UseNpgsql(connectionString);
+        var accessor = sp.GetRequiredService<IHttpContextAccessor>();
+        if (accessor.HttpContext?.User is { Identity.IsAuthenticated: true } user)
+        {
+          options.UseUserClaims(user);
+          options.EnableDetailedErrors(builder.Environment.IsDevelopment());
+        }
+      }, lifetime: ServiceLifetime.Transient);
+    }
+    else
+    {
+      // Fall back to individual environment variables
+      var pgUser = builder.Configuration.GetValue<string>("POSTGRES_USER");
+      var pgPass = builder.Configuration.GetValue<string>("POSTGRES_PASSWORD");
+      var pgHost = builder.Configuration.GetValue<string>("POSTGRES_HOST");
+
+      ArgumentException.ThrowIfNullOrWhiteSpace(pgUser);
+      ArgumentException.ThrowIfNullOrWhiteSpace(pgPass);
+      ArgumentException.ThrowIfNullOrWhiteSpace(pgHost);
+
+      if (Uri.TryCreate(pgHost, UriKind.Absolute, out var pgHostUri))
+      {
+        pgHost = pgHostUri.Authority;
+      }
+
+      var pgBuilder = new NpgsqlConnectionStringBuilder
+      {
+        Database = "controlr",
+        Username = pgUser,
+        Password = pgPass,
+        Host = pgHost
+      };
+
+      builder.Services.AddDbContextFactory<AppDb>((sp, options) =>
+      {
+        options.UseNpgsql(pgBuilder.ConnectionString);
+        var accessor = sp.GetRequiredService<IHttpContextAccessor>();
+        if (accessor.HttpContext?.User is { Identity.IsAuthenticated: true } user)
+        {
+          options.UseUserClaims(user);
+          options.EnableDetailedErrors(builder.Environment.IsDevelopment());
+        }
+      }, lifetime: ServiceLifetime.Transient);
+    }
+  }
+
+  private static string ReplaceEnvironmentVariables(string connectionString, IConfiguration configuration)
+  {
+    // Replace ${VAR_NAME} placeholders with actual values from configuration
+    var result = connectionString;
+    var pattern = @"\$\{([^}]+)\}";
+    var matches = System.Text.RegularExpressions.Regex.Matches(connectionString, pattern);
+
+    foreach (System.Text.RegularExpressions.Match match in matches)
+    {
+      var varName = match.Groups[1].Value;
+      var varValue = configuration.GetValue<string>(varName);
+      if (!string.IsNullOrWhiteSpace(varValue))
+      {
+        result = result.Replace(match.Value, varValue);
+      }
     }
 
-    var pgBuilder = new NpgsqlConnectionStringBuilder
-    {
-      Database = "controlr",
-      Username = pgUser,
-      Password = pgPass,
-      Host = pgHost
-    };
-
-    builder.Services.AddDbContextFactory<AppDb>((sp, options) =>
-    {
-      options.UseNpgsql(pgBuilder.ConnectionString);
-      var accessor = sp.GetRequiredService<IHttpContextAccessor>();
-      if (accessor.HttpContext?.User is { Identity.IsAuthenticated: true } user)
-      {
-        options.UseUserClaims(user);
-        options.EnableDetailedErrors(builder.Environment.IsDevelopment());
-      }
-    }, lifetime: ServiceLifetime.Transient);
+    return result;
   }
 
   private static void ConfigureDataProtection(this IHostApplicationBuilder builder)

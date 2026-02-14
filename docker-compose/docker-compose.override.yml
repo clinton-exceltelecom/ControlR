@@ -17,6 +17,8 @@ services:
 
   aspire:
     ports:
+      - "18888:18888"
       - "18889:18889"
     environment:
       ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: true
+      Dashboard__Frontend__AuthMode: Unsecured
