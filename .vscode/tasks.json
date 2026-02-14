@@ -2,13 +2,58 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build solution",
+      "label": "clean",
       "type": "shell",
-      "command": "dotnet build ControlR.slnx --verbosity quiet",
+      "command": "dotnet",
+      "args": ["clean", "ControlR.slnx"],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "restore",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["restore", "ControlR.slnx"],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "build-solution",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["build", "ControlR.slnx"],
       "group": {
         "kind": "build",
         "isDefault": true
       },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": ["$msCompile"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "build solution",
+      "type": "shell",
+      "command": "dotnet build ControlR.slnx --verbosity quiet",
+      "group": "build",
       "presentation": {
         "clear": true
       },
@@ -24,7 +69,7 @@
       "group": "build",
       "dependsOrder": "sequence",
       "dependsOn": ["build server"],
-      "problemMatcher": [],
+      "problemMatcher": ["$msCompile"],
       "file": "ControlR.Agent/ControlR.Agent.csproj"
     },
     {
@@ -34,7 +79,7 @@
       "group": "build",
       "dependsOrder": "sequence",
       "dependsOn": ["build agent"],
-      "problemMatcher": [],
+      "problemMatcher": ["$msCompile"],
       "file": "ControlR.DesktopClient/ControlR.DesktopClient.csproj"
     },
     {
@@ -44,7 +89,7 @@
       "group": "build",
       "dependsOrder": "sequence",
       "dependsOn": [],
-      "problemMatcher": [],
+      "problemMatcher": ["$msCompile"],
       "file": "ControlR.Web.Server/ControlR.Web.Server.csproj"
     },
     {
@@ -54,8 +99,64 @@
       "group": "build",
       "dependsOrder": "sequence",
       "dependsOn": ["build server"],
-      "problemMatcher": [],
+      "problemMatcher": ["$msCompile"],
       "file": "Tests/ControlR.Agent.LoadTester/ControlR.Agent.LoadTester.csproj"
+    },
+    {
+      "label": "test-all",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["test", "ControlR.slnx", "--logger", "console;verbosity=normal"],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": ["$msCompile"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "test-watch",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "watch",
+        "test",
+        "--project",
+        "${input:testProject}",
+        "--logger",
+        "console;verbosity=normal"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": ["$msCompile"],
+      "isBackground": true,
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "verify-env",
+      "type": "shell",
+      "command": "bash",
+      "args": ["scripts/verify-dev-env.sh"],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
     },
     {
       "label": "build + compose",
@@ -79,6 +180,36 @@
       },
       "group": "build",
       "problemMatcher": []
+    },
+    {
+      "label": "compose-down",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "projectName": "controlr",
+        "down": {
+          "removeVolumes": false
+        },
+        "files": [
+          "${workspaceFolder}/docker-compose/docker-compose.yml",
+          "${workspaceFolder}/docker-compose/docker-compose.override.yml"
+        ]
+      },
+      "group": "none",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "testProject",
+      "type": "pickString",
+      "description": "Select test project to watch",
+      "options": [
+        "Tests/ControlR.Web.Server.Tests/ControlR.Web.Server.Tests.csproj",
+        "Tests/ControlR.Agent.Tests/ControlR.Agent.Tests.csproj",
+        "Tests/ControlR.DesktopClient.Tests/ControlR.DesktopClient.Tests.csproj",
+        "Tests/ControlR.Libraries.Shared.Tests/ControlR.Libraries.Shared.Tests.csproj"
+      ],
+      "default": "Tests/ControlR.Web.Server.Tests/ControlR.Web.Server.Tests.csproj"
     }
   ]
 }

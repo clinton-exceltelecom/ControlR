@@ -21,7 +21,7 @@
       "cwd": "${workspaceFolder}/ControlR.DesktopClient",
       "launchSettingsProfile": "Run",
       "stopAtEntry": false,
-      "console": "internalConsole",
+      "console": "internalConsole"
     },
     {
       "name": "Server (Debug)",
@@ -44,7 +44,7 @@
       },
       "hosted": true,
       "program": "${workspaceFolder}/ControlR.Web.Server/bin/Debug/net10.0/ControlR.Web.Server.dll",
-      "cwd": "${workspaceFolder}/ControlR.Web.Server",
+      "cwd": "${workspaceFolder}/ControlR.Web.Server"
     },
     {
       "name": "Server (Hot Reload)",
@@ -113,6 +113,50 @@
       "cwd": "${workspaceFolder}/ControlR.DesktopClient",
       "stopAtEntry": false,
       "console": "internalConsole"
+    },
+    {
+      "name": "Aspire AppHost (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/ControlR.Web.AppHost/bin/Debug/net10.0/ControlR.Web.AppHost.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/ControlR.Web.AppHost",
+      "launchSettingsProfile": "https",
+      "stopAtEntry": false,
+      "console": "internalConsole",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?:\\/\\/\\S+)"
+      }
+    },
+    {
+      "name": "Aspire AppHost (Hot Reload)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "dotnet",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/ControlR.Web.AppHost/ControlR.Web.AppHost.csproj",
+        "--launch-profile",
+        "https"
+      ],
+      "cwd": "${workspaceFolder}/ControlR.Web.AppHost",
+      "stopAtEntry": false,
+      "console": "internalConsole",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?:\\/\\/\\S+)"
+      }
     }
   ],
   "compounds": [
@@ -186,6 +230,32 @@
         "hidden": false,
         "group": "Compounds",
         "order": 3
+      }
+    },
+    {
+      "name": "Aspire Full Stack (Debug)",
+      "preLaunchTask": "build solution",
+      "configurations": [
+        "Aspire AppHost (Debug)"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "Aspire",
+        "order": 0
+      }
+    },
+    {
+      "name": "Aspire Full Stack (Hot Reload)",
+      "preLaunchTask": "build solution",
+      "configurations": [
+        "Aspire AppHost (Hot Reload)"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "Aspire",
+        "order": 1
       }
     }
   ]

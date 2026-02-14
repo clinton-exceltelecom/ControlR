@@ -1,0 +1,39 @@
+{
+  "recommendations": [
+    // Required extensions for C# and .NET development
+    "ms-dotnettools.csdevkit",
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.vscode-dotnet-runtime",
+
+    // Docker support
+    "ms-azuretools.vscode-docker",
+
+    // Testing support
+    "formulahendry.dotnet-test-explorer",
+
+    // Recommended for productivity
+    "editorconfig.editorconfig",
+    "visualstudioexptteam.vscodeintellicode",
+    "ms-vscode.vscode-typescript-next",
+
+    // Blazor and web development
+    "ms-vscode.vscode-js-profile-flame",
+    "dbaeumer.vscode-eslint",
+
+    // Git integration
+    "eamodio.gitlens",
+
+    // YAML support for docker-compose
+    "redhat.vscode-yaml",
+
+    // XML support for .csproj and .run files
+    "redhat.vscode-xml",
+
+    // Markdown support for documentation
+    "yzhang.markdown-all-in-one"
+  ],
+  "unwantedRecommendations": [
+    // Avoid conflicts with C# Dev Kit
+    "ms-dotnettools.blazorwasm-companion"
+  ]
+}

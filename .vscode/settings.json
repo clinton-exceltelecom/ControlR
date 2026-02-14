@@ -1,0 +1,61 @@
+{
+  // File associations
+  "files.associations": {
+    "*.slnx": "xml",
+    "*.axaml": "xml",
+    "*.razor": "html",
+    "*.razor.css": "css",
+    "*.razor.js": "javascript"
+  },
+
+  // Terminal configuration
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.defaultProfile.windows": "pwsh",
+
+  // Test Explorer configuration
+  "dotnet-test-explorer.testProjectPath": "Tests/**/*.csproj",
+  "dotnet.defaultSolution": "ControlR.slnx",
+  "dotnet.unitTests.runSettingsPath": "",
+
+  // C# configuration
+  "csharp.suppressDotnetRestoreNotification": false,
+  "csharp.suppressBuildAssetsNotification": false,
+  "omnisharp.enableRoslynAnalyzers": true,
+  "omnisharp.enableEditorConfigSupport": true,
+  "omnisharp.enableImportCompletion": true,
+
+  // Editor configuration
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+
+  // File exclusions for better performance
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/.vs": true
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/.vs": true,
+    "**/node_modules": true
+  },
+
+  // Blazor and Razor configuration
+  "razor.format.enable": true,
+  "razor.languageServer.debug": false,
+
+  // Docker configuration
+  "docker.dockerComposeBuild": true,
+  "docker.dockerComposeDetached": true,
+
+  // Git configuration
+  "git.ignoreLimitWarning": true,
+
+  // Workspace recommendations
+  "extensions.ignoreRecommendations": false
+}
